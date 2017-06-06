@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# macOS specific configuration
+
+# Create PATH
+[ -f "${myRCbyOS}/path" ] && source "${myRCbyOS}/path"
+
+[[ "$-" == *i* ]] && {
+    alias ls="ls -G"
+    
+    export EDITOR=/usr/bin/vi
+    export PAGER=/usr/bin/less
+}

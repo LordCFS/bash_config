@@ -1,0 +1,12 @@
+# FreeBSD specific configuration
+
+# Create PATH
+[ -f "${myRCbyOS}/path" ] && source "${myRCbyOS}/path"
+
+[[ "$-" == *i* ]] && {
+    alias ls="ls -G"
+    alias tar="gtar"
+    
+    export EDITOR=/usr/bin/vi
+    export PAGER=/usr/bin/less
+}

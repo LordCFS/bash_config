@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+
+export PATH=""
+pathappend "/usr/local/bin/${hostOSISA}"
+pathappend "/usr/local/bin"
+pathappend "/opt/sunstudio12.1/bin"
+pathappend "/opt/solstudio12.2/bin"
+pathappend "/opt/solstudio12.3/bin"
+pathappend "/usr/ccs/bin/${hostOSISA}"
+pathappend "/usr/ccs/bin"
+pathappend "/usr/bin/${hostOSISA}"
+pathappend "/usr/bin"
+pathappend "/usr/sbin/${hostOSISA}"
+pathappend "/usr/sbin"
+pathappend "/usr/gnu/bin/${hostOSISA}"
+pathappend "/usr/gnu/bin"
+pathappend "/usr/sfw/bin/${hostOSISA}"
+pathappend "/usr/sfw/bin"
+pathappend "/usr/X/bin/${hostOSISA}"
+pathappend "/usr/X/bin"
+pathappend "/usr/X11/bin/${hostOSISA}"
+pathappend "/usr/X11/bin"
+pathappend "/usr/openwin/bin/${hostOSISA}"
+pathappend "/usr/openwin/bin"
+pathappend "/opt/sfw/bin/${hostOSISA}"
+pathappend "/opt/sfw/bin"
+
+export MANPATH=""
+pathappend /usr/share/man MANPATH
+pathappend /usr/gnu/share/man MANPATH
+pathappend /usr/sfw/share/man MANPATH
+pathappend /usr/X/share/man MANPATH
+pathappend /usr/X11/share/man MANPATH
+pathappend /usr/openwin/share/man MANPATH
+pathappend /opt/sfw/share/man MANPATH
+pathappend /opt/sfw/man MANPATH
+
+# Compilers
+[ -x /usr/bin/cc ] || {
+    pathprepend "/opt/SUNWspro/bin"
+    pathprepend "/opt/sunstudio11/SUNWspro/bin"
+    pathprepend "/opt/sunstudio12/SUNWspro/bin"
+    pathprepend "/opt/sunstudio12.1/bin"
+    pathprepend "/opt/sunstudio12.1/prod/bin"
+    pathprepend "/opt/sunstudio12.1/prod/bin/${hostOSISA}"
+    
+    pathprepend "/opt/SUNWspro/share/man" MANPATH
+    pathprepend "/opt/sunstduio11/SUNWspro/share/man" MANPATH
+    pathprepend "/opt/sunstudio12/SUNWspro/share/man" MANPATH
+    pathprepend "/opt/sunstudio12.1/share/man" MANPATH
+}
+
+for myBin in pgrep pkill; do
+    for myBinTest in $(which ${myBin}); do
+        export myBin_${myBin/-/}="${myBinTest}"
+        alias myBin_${myBin/-/}="${myBinTest}"
+        break
+    done
+    
+    [ -z $(eval echo \$"myBin_${myBin}") ] && {
+        [[ "$-" == *i* ]] && {
+            echo "WARNING: Could not resolve location for ${myBin}." >&2
+        }
+        alias myBin_${myBin/-/}="false"
+    }
+    unset myBin_${myBin/-/}
+    export -n myBin_${myBin/-/}
+done
+unset myBin myBinTest

@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+
+pathappend "/usr/local/sbin"
+pathappend "/usr/local/bin"
+pathappend "/Applications/Xcode.app/Contents/Developer/usr/bin"
+pathappend "/Developer/usr/bin"
+pathappend "/Developer/usr/sbin"
+pathappend "/Developer/Tools"
+pathappend "/usr/bin"
+pathappend "/bin"
+pathappend "/usr/sbin"
+pathappend "/sbin"
+
+# Python packages installed with the '--user' flag
+pathprepend "${HOME}/Library/Python/2.7/bin"
+
+# There is no need to set MANPATH, that can be globally controlled through
+# editing /etc/man.conf
+[ -n "${MANPATH}" ] && unset MANPATH

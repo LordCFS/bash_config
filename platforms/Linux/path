@@ -1,0 +1,38 @@
+#!/bin/bash
+
+export PATH=""
+case ${hostOSDist} in
+'Ubuntu')
+    pathappend "/usr/local/sbin"
+    pathappend "/usr/local/bin"
+    pathappend "/usr/sbin"
+    pathappend "/usr/bin"
+    pathappend "/sbin"
+    pathappend "/bin"
+    pathappend "/usr/games"
+    pathappend "/usr/local/games"
+    ;;
+'RedHat')
+    pathappend "/usr/local/bin"
+    pathappend "/usr/lib64/qt-3.3/bin"
+    pathappend "/usr/local/sbin"
+    pathappend "/usr/local/bin"
+    pathappend "/sbin"
+    pathappend "/bin"
+    pathappend "/usr/sbin"
+    pathappend "/usr/bin"
+    ;;
+*)
+    pathappend "/usr/local/bin"
+    pathappend "/usr/local/sbin"
+    pathappend "/usr/bin"
+    pathappend "/usr/sbin"
+    pathappend "/sbin"
+    pathappend "/bin"
+    ;;
+esac
+
+export MANPATH=""
+pathappend "/usr/share/man" MANPATH
+pathprepend "/usr/local/man" MANPATH
+pathprepend "/usr/local/share/man" MANPATH

@@ -1,0 +1,125 @@
+# BASH initialization and start up file.
+#
+# Designed to work for either interactive or non-interactive shell
+# invocations.
+
+# Environmental sanity
+#
+# If there is no home directory (and somehow bash_config has been invoked),
+# then create a temporary directory and hope for the best.
+export USER=${USER:=${LOGNAME:="UNKNOWN"}}
+[ -n "${HOME}" -a -d "${HOME}" ] || {
+	[ -d /var/tmp ] && {
+    	tmpHOME=/var/tmp/${USER}-${RANDOM}
+		[ -d "${tmpHOME}" ] || {
+			mkdir -m 0700 "${tmpHOME}"
+			export HOME="${tmpHOME}"
+			unset tmpHOME
+		}
+	}
+}
+
+# Base start up script directory.
+myRCDir="${HOME}/.bash_config"
+
+# Load common functions
+[ -f "${myRCDir}/functions" ] && source "${myRCDir}/functions"
+
+shopt -s expand_aliases
+# Configure minimalist path and find programs need by start up.
+[ -f "${myRCDir}/path" ] && source "${myRCDir}/path"
+
+# Load in failsafe defaults
+[ -f "${myRCDir}/defaults" ] && source "${myRCDir}/defaults"
+
+# System Identification
+[ "${hostName}" ] || {
+    hostName=$(myBin_uname -n | myBin_sed -e 's/\..*$//')
+}
+
+case ${domianName} in
+    ''|'(none)')
+    domainName="_default"
+    ;;
+esac
+
+[ -f "${myRCDir}/host-ident" ] && source "${myRCDir}/host-ident"
+
+# Interactive Logins
+[[ "$-" == *i* ]] && {
+    # Prompts
+    export PS1='\u@\h:\w\$ '
+    export PS2='\$ '
+    export PS3='\$\$ '
+
+    # All glory to the hegemony of xterm
+    export TERM=${TERM:=xterm}
+    myBin_tput init 2>/dev/null
+
+    myTTY=${TTY:=$(/usr/bin/tty || echo "")}
+    myTTY=${myTTY/#\/dev\//}
+
+    export HISTTIMEFORMAT='%G-%m-%d %H:%M:%S '
+    export HISTSIZE=-1
+    export HISTFILESIZE=-1
+    historyDirBase="${HOME}/.bash_history"
+    historyDir="${historyDirBase}/${hostName}"
+    historyFile="${historyDir}/${myTTY}"
+
+    # Relocate "flat" history file
+    [ -f "${historyDirBase}" ] && {
+        mv -f "${historyDirBase}" "${historyDirBase}-FOUND" 2>/dev/null || {
+            HISTFILE="${historyDirBase}"
+        }
+    }
+    [ -d "${historyDir}" ] || mkdir -m 0700 -p "${historyDir}" 2>/dev/null
+    [ -d "$(dirname "${historyFile}")" ] || mkdir -m 0700 -p "$(dirname "${historyFile}")" 2>/dev/null
+    touch "${historyFile}" && {
+        chmod 0600 "${historyFile}" 2>/dev/null
+        HISTFILE="${historyFile}"
+    } || {
+        HISTFILE="/var/tmp/.bash_history-${USER}-${myTTY}"
+        rm -f "${HISTFILE}" 2>/dev/null
+        touch "${HISTFILE}" 2>/dev/null
+        chmod 0600 "${HISTFILE}" 2>/dev/null
+    }
+    [ -f "${historyDirBase}-FOUND" ] && {
+        cat "${historyDirBase}-FOUND" >>"${HISTFILE}" 2>/dev/null
+        rm -f "${historyDirBase}-FOUND" 2>/dev/null
+    }
+    unset myTTY historyDirBase historyDir historyFile
+}
+
+# All other global configuration
+
+# Apply OS, domain, and host specific settings (in that order).
+
+# Include host-specific, and possibly in turn, OS-specific
+# start up scripts.
+myRCbyOSDir="${myRCDir}/platforms"
+myRCbyOS="${myRCbyOSDir}/${hostOSType}"
+myRCbyDomainDir="${myRCDir}/domains"
+myRCbyDomain="${myRCbyDomainDir}/${domainName}"
+myRCbyHostDir="${myRCDir}/hosts"
+myRCbyHost="${myRCbyHostDir}/${hostName}"
+for localRC in "${myRCbyOS}" "${myRCbyDomain}" "${myRCbyHost}"
+do
+    [ -f "${localRC}/rc" ] && source "${localRC}/rc"
+done
+unset localRC
+
+[ -f "${myRCDir}/user" ] && source "${myRCDir}/user"
+
+# Clean up functions
+unset -f pathremove pathprepend pathappend
+
+# Clean up temporary variables and command aliases
+cleanupvars=$(for match in hostName hostOS myRC myTerm; do \
+                  declare | myBin_grep $match'.*=' | myBin_awk -F= ' {printf("%s ", $1);}'; \
+              done; echo "")
+myBinAliases=$(alias | myBin_awk '{print $2}' | myBin_awk -F= '$1 ~ /^myBin_/ {print $1}')
+for cleanalias in ${myBinAliases}; do
+    unalias $cleanalias
+done
+export -n ${cleanupvars} cleanupvars cleanalias myBinAliases
+unset ${cleanupvars} cleanupvars cleanalias myBinAliases

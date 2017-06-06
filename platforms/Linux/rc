@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# Linux specific configuration
+
+# Create PATH
+[ -f "${myRCbyOS}/path" ] && source "${myRCbyOS}/path"
+
+ulimit -c unlimited
+
+case ${hostOSDist} in
+'RedHat')
+    # Fix dumb default umask setting on RHEL 6.1
+    [[ ${hostOSVersMajor} = 6 && ${hostOSVersMinor} = 1 ]] && umask 0022
+    ;;
+esac
+
+# Interactive mode settings
+[[ "$-" == *i* ]] && {
+    
+    [ -x /usr/bin/vim ] && export EDITOR=/usr/bin/vim
+    [ -x /usr/bin/less ] && export PAGER=/usr/bin/less
+    [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+    [ -x /usr/bin/dircolors] && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls="ls --color=auto"
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+}

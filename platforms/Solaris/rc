@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# Solaris specific configuration
+
+# SunOS 4 (née Solaris 1) is quite obsolete now.
+# Will emit a warning and abort back to the parent init script and carry on.
+[ "${hostOSVersMajor}" -lt 5 ] && {
+    [[ "$-" == *i* ]] && {
+        echo "WARNING: Running on pre-Solaris 2 system." >&2
+    }
+    return 1
+}
+
+[ -x /usr/bin/optisa ] && {
+    hostOSISA=$(/usr/bin/optisa sparcv9 sparcv7 amd64 i86)
+}
+
+# Create PATH
+[ -f "${myRCbyOS}/path" ] && source "${myRCbyOS}/path"
+
+# Perfer user or locally installed terminfo directories if available.
+# Needs to be set for non-interactive shells as well.
+for myTermInfoDir in "${HOME}/.terminfo" "/opt/sfw/"
+do
+    myTermInfoByLetter=${TERM:0:1}
+    [ -d "${myTermInfoDir}/${myTermInfoByLetter}" ] && {
+        [ -f "${myTermInfoDir}/${myTermInfoByLetter}/${TERM}" ] && {
+            export TERMINFO=${myTermInfoDir}
+            break
+        }
+    }
+done
+
+# Interactive mode settings
+[[ "$-" == *i* ]] && {
+    for myLS in /usr/gnu/bin/${hostOSISA} \
+                /usr/gnu/bin \
+                /opt/sfw/bin
+    do
+        [ -x ${myLS}/ls ] && {
+            alias ls="${myLS}/ls --color=auto"
+            break
+        }
+        [ -x ${myLS}/gls ] && {
+            alias ls="${myLS}/gls --color=auto"
+            break
+        }
+    done
+    
+    for myTAR in /usr/bin/${hostOSISA} \
+                 /usr/bin \
+                 /usr/sfw/bin${hostOSISA} \
+                 /usr/sfw/bin \
+                 /opt/sfw/bin
+    do
+        [ -x ${myTAR}/gtar ] && {
+            alias tar="${myTAR}/gtar"
+            break
+        }
+    done
+    
+    unset myLS myTAR
+
+    export EDITOR=/usr/bin/vi
+    export PAGER=/usr/bin/less
+}
+
+unset hostOSISA

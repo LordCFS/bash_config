@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Gather information about the running platform
+
+# hostOSType = Basic OS flavor (FreeBSD, Linux, Solaris, Cygwin)
+# hostOSDist = Distribution/Vendor (Ubuntu, RedHat) (empty if not avail.)
+# hostOSPlat = CPU architecture (sparc, x86, x86_64)
+# hostOSVers = Doted decimal of OS version (x.y or x.y.z)
+# hostOSVersMajor = Major revision of the OS
+# hostOSVersMinor = Minor revision of the OS
+# hostOSVersMicro = Micro/Patch revision of the OS (empty if not avail.)
+# hostOSMaxBit = Largest native wordsize of system
+
+hostOSType=$(myBin_uname -s)
+hostOSVers=$(myBin_uname -r | myBin_sed -e 's/[(-].*//')
+
+hostident_unamearg="-p"
+
+case "${hostOSType}" in
+CYGWIN*)
+    hostOSType=Windows
+    hostOSDist=Cygwin
+    hostOSVers=$(myBin_uname -s | myBin_sed -e 's/^.*-//')
+    hostident_unamearg="-m"
+    ;;
+Darwin)
+    [[ -x /usr/bin/sw_vers ]] && {
+        # Having the sw_vers command is already a good idication that this is
+        # a macOS host.
+        [[ $(/usr/bin/sw_vers -productName) == "Mac OS X" ]] && hostOSDist=macOS
+        hostOSVers=$(/usr/bin/sw_vers -productVersion)
+    }
+    hostident_unamearg="-m"
+    ;;
+SunOS)
+    hostOSType=Solaris
+    ;;
+Linux)
+    [[ -x /usr/bin/lsb_release ]] && {
+        hostOSDist=$(/usr/bin/lsb_release -s -i)
+        hostOSVers=$(/usr/bin/lsb_release -s -r)
+    }
+    case ${hostOSDist} in
+    'RedHatEnterpriseServer'|'CentOS')
+        hostOSDist=RedHat ;;
+    esac
+    ;;
+esac
+
+hostOSPlat=$(myBin_uname "${hostident_unamearg}")
+unset hostident_unamearg
+
+case "${hostOSPlat}" in
+'x86'|'i386'|'i686')
+    [[ "${hostOSType}" = "Solaris" ]] && {
+        [[ "$(/usr/bin/optisa $(/usr/bin/isalist))" = "amd64" ]] && {
+            hostOSPlat="x86_64"
+            hostOSMaxBit=64
+        } || hostOSMaxBit=32
+    }
+    ;;
+'x86_64'|'amd64')
+    hostOSMaxBit=64 ;;
+'sparc')
+    hostOSMaxBit=64 ;;
+esac
+
+read hostOSVersMajor \
+     hostOSVersMinor \
+     hostOSVersMicro <<<$(echo "${hostOSVers}" | myBin_tr '.' ' ')

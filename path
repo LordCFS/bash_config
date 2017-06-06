@@ -1,0 +1,22 @@
+# Find basic utilities required to boot strap BASH start-up.
+
+alias which='builtin type -ap'
+export PATH=${PATH:="/bin:/usr/bin"}
+
+for myBin in uname tr sed awk grep head ps ssh-agent ssh-add; do
+    for myBinTest in $(which ${myBin}); do
+        export myBin_${myBin/-/}="${myBinTest}"
+        alias myBin_${myBin/-/}="${myBinTest}"
+        break
+    done
+    
+    [ -z $(eval echo \$"myBin_${myBin}") ] && {
+        [[ "$-" == *i* ]] && {
+            echo "WARNING: Could not resolve location for ${myBin}." >&2
+        }
+        alias myBin_${myBin/-/}="false"
+    }
+    unset myBin_${myBin/-/}
+    export -n myBin_${myBin/-/}
+done
+unset myBin myBinTest
