@@ -21,9 +21,10 @@ esac
     [ -x /usr/bin/less ] && export PAGER=/usr/bin/less
     [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
-    [ -x /usr/bin/dircolors] && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls="ls --color=auto"
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
+    [ -x /usr/bin/dircolors ] && {
+        test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+        for i in ls grep fgrep egrep; do
+            alias ${i}="${i} --color=auto"
+        done
+    }
 }
